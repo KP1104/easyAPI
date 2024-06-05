@@ -1,4 +1,4 @@
-package com.iage.easyAPI.response;
+package com.iage.easyAPI.utility;
 
 import com.iage.easyAPI.compositeKeys.CKeyTranCdSrCd;
 import org.json.JSONArray;
