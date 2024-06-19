@@ -2,6 +2,8 @@ package com.iage.easyAPI.service;
 
 
 import com.iage.easyAPI.model.EncMobiShopperTrnItemsModel;
+import com.iage.easyAPI.model.SeriesDetailsModel;
+import com.iage.easyAPI.model.StagingDetailModel;
 import com.iage.easyAPI.repository.EncMobiShopperTrnItemsRepository;
 import com.iage.easyAPI.repository.sequences.Sequences;
 import com.iage.easyAPI.utility.CustomJson;
@@ -13,7 +15,9 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.sql.Date;
+import java.sql.Time;
 import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -84,7 +88,7 @@ public class EncMobiShopperTrnItemsService {
         String[] tranTypearr = {"PUR_IN", "CRN", "RADS", "CARG", "STK_REC"};
 
 
-        Long nextSeqTranCd = sequences.getNextMobiShoppertrnSequence();
+        Long nextSeqTranCd = sequences.getNextMobiShopperTrnSequence();
 
         /*
          * Calling repository procedure to get tranCd and rowCount for existing user who already has a tranCd generated
@@ -121,7 +125,7 @@ public class EncMobiShopperTrnItemsService {
                                 if (availableStockQty < Integer.parseInt(strQty)) {
                                     return customJson.RaiseApplicationError("99", "Stock goes negative. Available qty is : " + availableStockQty);
                                 } else {
-                                    Integer x = encMobiShopperTrnItemsRepository.insertTrnItems(compCd, branchCd, tranCd, docSeries, sqlDate, username, machineName, fromLocationCd, itemCd, qty, tranType, rowCount, issueReceiveCode);
+                                    Integer insertedRowCount = encMobiShopperTrnItemsRepository.insertTrnItems(compCd, branchCd, tranCd, docSeries, sqlDate, username, machineName, fromLocationCd, itemCd, qty, tranType, rowCount, issueReceiveCode);
                                 }
                                 return customJson.RaiseApplicationMsg("0", "Item inserted successfully with Tran Code : " + tranCd);
                             }
@@ -142,7 +146,7 @@ public class EncMobiShopperTrnItemsService {
 
             return customJson.RaiseApplicationError("-1", "Stock goes negative. Available qty is : " + availableStockQty);
         } else {
-            Integer x = encMobiShopperTrnItemsRepository.insertTrnItems(compCd, branchCd, nextSeqTranCd, docSeries, sqlDate, username, machineName, fromLocationCd, itemCd, qty, tranType, rowCount, issueReceiveCode);
+            Integer insertedRowCount = encMobiShopperTrnItemsRepository.insertTrnItems(compCd, branchCd, nextSeqTranCd, docSeries, sqlDate, username, machineName, fromLocationCd, itemCd, qty, tranType, rowCount, issueReceiveCode);
         }
         return customJson.RaiseApplicationMsg("0", "Item inserted successfully with Tran Code : " + nextSeqTranCd);
 
@@ -164,6 +168,55 @@ public class EncMobiShopperTrnItemsService {
         } else {
             return customJson.RaiseApplicationMsg("0",deletedRows + " rows deleted");
         }
+    }
+
+    @Transactional
+    public String insertTrnItemsCommit(String params) {
+
+        JSONObject jsonObject = new JSONObject(params);
+        String compCd = jsonObject.getString("compCd");
+        String branchCd = jsonObject.getString("branchCd");
+        String userName = jsonObject.getString("userName");
+        String tranType = jsonObject.getString("tranType");
+        //String docSeries = jsonObject.getString("docSeries");
+        String tranCd = "";
+
+        Long nextTranCd = null;
+
+        Time localTime = Time.valueOf(LocalTime.now());
+
+        if(compCd.equals("") || branchCd.equals("") || userName.equals("") || tranType.equals("")) {
+            return customJson.RaiseApplicationError("99","Null values found in the request");
+        }
+            List<StagingDetailModel> stagingDetailModelList = encMobiShopperTrnItemsRepository.getStagingDetailsData(compCd, branchCd, userName, tranType);
+            for (StagingDetailModel model :
+                 stagingDetailModelList) {
+                Integer rowCount = model.getRowCount();
+                //System.out.println("Staging detail model row count " + rowCount);
+                if(rowCount == 1) {
+                    List<SeriesDetailsModel> seriesDetailModelList = encMobiShopperTrnItemsRepository.getSeriesDetailData(compCd, branchCd, model.getDocSeries());
+                    if (seriesDetailModelList.isEmpty()) {
+                        return customJson.RaiseApplicationError("99","Issues in fetching series data");
+                    } else {
+                        // to write the conditions after series list
+                        for (SeriesDetailsModel seriesModel:
+                             seriesDetailModelList) {
+                             tranCd = seriesModel.getTranCd();
+                        }
+                        String maxDocumentCode = encMobiShopperTrnItemsRepository.getMaxDocNumber(compCd, branchCd, Long.valueOf(tranCd));
+                        nextTranCd = sequences.getNextTranCdSequence();
+
+                        Integer insertHdr = encMobiShopperTrnItemsRepository.insertEncLocationHeader(compCd, branchCd, nextTranCd, model.getDocSeries(), maxDocumentCode, model.getDocDate(), model.getFromLocationCd(), model.getToLocationCd(), "Data saved from mobile app",
+                                localTime, userName, model.getMachineName(), model.getDocDate(), Long.valueOf(tranCd), "N", userName, model.getMachineName(), model.getDocDate(), "Entered by mobile app");
+
+                        Integer insertDetail = encMobiShopperTrnItemsRepository.insertEncLocationDetail(compCd, branchCd, nextTranCd, model.getSrCd(), model.getQty(), model.getItemCd(), model.getFromLocationCd(), model.getToLocationCd());
+                        System.out.println(insertDetail);
+                        return customJson.RaiseApplicationMsg("0","Location transfer created with Doc Cd : " + maxDocumentCode);
+                    }
+                }
+            }
+
+        return customJson.RaiseApplicationMsg("0", "Item inserted successfully");
     }
 }
 

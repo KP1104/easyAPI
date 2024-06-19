@@ -29,6 +29,11 @@ public class Controller {
         return encMobiShopperTrnItemsService.deleteTrnItemsFromStaging(params);
     }
 
+    @PostMapping(value = "/locationTransferCommit")
+    public Object locationTransferCommit(@RequestBody String params) {
+        return encMobiShopperTrnItemsService.insertTrnItemsCommit(params);
+    }
+
     @PostMapping(value = "/json")
     public Object jsonOutput() {
         CustomResponseObject customResponseObject = new CustomResponseObject();

@@ -10,7 +10,7 @@ public class Sequences {
     @Autowired
     JdbcTemplate jdbcTemplate;
 
-    public Long getNextMobiShoppertrnSequence() {
+    public Long getNextMobiShopperTrnSequence() {
         String sql = "SELECT SEQ_MOBISHOPER_TRN_ITEMS.NEXTVAL FROM dual";
         return jdbcTemplate.queryForObject(sql, Long.class);
     }

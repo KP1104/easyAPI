@@ -52,18 +52,18 @@ public class EncMobiShopperTrnItemsRepository {
         @Override
         public StagingDetailModel mapRow(ResultSet rs, int rowNum) throws SQLException{
             StagingDetailModel stagingDetailModel = new StagingDetailModel();
-            stagingDetailModel.setCompCd(rs.getString("compCd"));
-            stagingDetailModel.setBranchCd(rs.getString("branchCd"));
-            stagingDetailModel.setDocSeries(rs.getString("docSeries"));
-            stagingDetailModel.setDocDate(rs.getDate("docDate"));
-            stagingDetailModel.setSrCd(rs.getInt("srCd"));
-            stagingDetailModel.setItemCd(rs.getString("itemCd"));
-            stagingDetailModel.setQty(rs.getBigDecimal("qty"));
-            stagingDetailModel.setFromLocationCd(rs.getString("fromLocationCd"));
-            stagingDetailModel.setToLocationCd(rs.getString("toLocationCd"));
-            stagingDetailModel.setUserName(rs.getString("userName"));
-            stagingDetailModel.setMachineName(rs.getString("machineName"));
-            stagingDetailModel.setRowCount(rs.getRow());
+            stagingDetailModel.setCompCd(rs.getString("COMP_CD"));
+            stagingDetailModel.setBranchCd(rs.getString("BRANCH_CD"));
+            stagingDetailModel.setDocSeries(rs.getString("DOC_SERIES"));
+            stagingDetailModel.setDocDate(rs.getDate("DOC_DT"));
+            stagingDetailModel.setSrCd(rs.getInt("SR_CD"));
+            stagingDetailModel.setItemCd(rs.getString("ITEM_CD"));
+            stagingDetailModel.setQty(rs.getBigDecimal("QTY"));
+            stagingDetailModel.setFromLocationCd(rs.getString("FROM_LOC_CD"));
+            stagingDetailModel.setToLocationCd(rs.getString("TO_LOC_CD"));
+            stagingDetailModel.setUserName(rs.getString("USER_NM"));
+            stagingDetailModel.setMachineName(rs.getString("MACHINE_NM"));
+            stagingDetailModel.setRowCount(rs.getInt("ROW_COUNT"));
 
             return stagingDetailModel;
         }
@@ -77,10 +77,10 @@ public class EncMobiShopperTrnItemsRepository {
         @Override
         public SeriesDetailsModel mapRow(ResultSet rs, int rowNum) throws SQLException {
             SeriesDetailsModel seriesDetailsModel = new SeriesDetailsModel();
-            seriesDetailsModel.setSeriesCd(rs.getString("seriesCd"));
-            seriesDetailsModel.setSubTypeCd(rs.getString("subTypeCd"));
-            seriesDetailsModel.setTypeCd(rs.getString("typeCd"));
-            seriesDetailsModel.setTranCd(rs.getString("tranCd"));
+            seriesDetailsModel.setSeriesCd(rs.getString("SERIES_CD"));
+            seriesDetailsModel.setSubTypeCd(rs.getString("TYPE_CD"));
+            seriesDetailsModel.setTypeCd(rs.getString("SUBTYPE_CD"));
+            seriesDetailsModel.setTranCd(rs.getString("TRAN_CD"));
 
             return seriesDetailsModel;
         }
@@ -220,33 +220,37 @@ public class EncMobiShopperTrnItemsRepository {
      * sql query to select parameters from staging table based on the required arguments
      * @param compCd unique comp code selected by the user
      * @param branchCd unique branch code selected by the user
-     * @param tranCd unique tran code generated based on the conditions
+     * @param userName unique username used to log in
+     * @param tranType unique transaction type passed by the user
      * @return list of type staging details model
      * @see StagingDetailModel
      */
-    public List<StagingDetailModel> getStagingDetailsData (String compCd, String branchCd, Integer tranCd) {
-        String sql = "SELECT ENC_MOBISHOPER_TRN_ITEMS.COMP_CD, " +
-                "       ENC_MOBISHOPER_TRN_ITEMS.BRANCH_CD, " +
-                "       ENC_MOBISHOPER_TRN_ITEMS.DOC_SERIES, " +
-                "       ENC_MOBISHOPER_TRN_ITEMS.DOC_DT, " +
-                "       ENC_MOBISHOPER_TRN_ITEMS.SR_CD, " +
-                "       ENC_MOBISHOPER_TRN_ITEMS.ITEM_CD, " +
-                "       ENC_MOBISHOPER_TRN_ITEMS.QTY, " +
-                "       ENC_MOBISHOPER_TRN_ITEMS.FROM_LOC_CD, " +
-                "       ENC_MOBISHOPER_TRN_ITEMS.TO_LOC_CD, " +
-                "       ENC_MOBISHOPER_TRN_ITEMS.ACCT_CD, " +
-                "       ENC_MOBISHOPER_TRN_ITEMS.USER_NM, " +
-                "       ENC_MOBISHOPER_TRN_ITEMS.MACHINE_NM, " +
+    // remove tran code and add username and tran type as parameters to get details of all staging data
+    public List<StagingDetailModel> getStagingDetailsData (String compCd, String branchCd, String userName, String tranType) {
+        String sql = "SELECT COMP_CD, " +
+                "       BRANCH_CD, " +
+                "       DOC_SERIES, " +
+                "       DOC_DT, " +
+                "       SR_CD, " +
+                "       ITEM_CD, " +
+                "       QTY, " +
+                "       FROM_LOC_CD, " +
+                "       TO_LOC_CD, " +
+                "       ACCT_CD, " +
+                "       USER_NM, " +
+                "       MACHINE_NM, " +
                 "       ROWNUM AS ROW_COUNT " +
                 "  FROM ENC_MOBISHOPER_TRN_ITEMS " +
-                " WHERE ENC_MOBISHOPER_TRN_ITEMS.COMP_CD = :compCd AND " +
-                "       ENC_MOBISHOPER_TRN_ITEMS.BRANCH_CD = :branchCd AND " +
-                "       ENC_MOBISHOPER_TRN_ITEMS.TRAN_CD = :tranCd";
+                " WHERE COMP_CD = :compCd AND " +
+                "       BRANCH_CD = :branchCd AND " +
+                "       USER_NM = :userName AND " +
+                "       TRAN_TYPE = :tranType";
 
         MapSqlParameterSource params = new MapSqlParameterSource();
         params.addValue("compCd",compCd);
         params.addValue("branchCd",branchCd);
-        params.addValue("tranCd",tranCd);
+        params.addValue("userName",userName);
+        params.addValue("tranType", tranType);
 
         return namedParameterJdbcTemplate.query(sql, params, new StagingDetailsMapper());
     }
@@ -281,7 +285,7 @@ public class EncMobiShopperTrnItemsRepository {
      * @implNote tran code is fetched from getStagingDetailsData
      * @return document number of type long
      */
-    public Long getMaxDocNumber(String compCd, String branchCd, Long tranCd) {
+    public String getMaxDocNumber(String compCd, String branchCd, Long tranCd) {
         String sql = "{? = call GET_MAX_DOC_NO(?, ?, ?)}";
 
         return jdbcTemplate.execute(connection -> {
@@ -293,7 +297,7 @@ public class EncMobiShopperTrnItemsRepository {
             return callableStatement;
         }, (CallableStatement cs) -> {
             cs.execute();
-            return cs.getLong(1);
+            return cs.getString(1);
         });
     }
 
@@ -346,7 +350,7 @@ public class EncMobiShopperTrnItemsRepository {
      */
     public Integer insertEncLocationHeader(String compCd, String branchCd, Long tranCd, String docSeries,
                                            String docCd, Date docDate, String fromLocationCd, String toLocationCd,
-                                           String remarks, Date docTime, String enteredBy, String machineName, Date enteredDate,
+                                           String remarks, Time docTime, String enteredBy, String machineName, Date enteredDate,
                                            Long docTranCd, String status, String lastEnteredBy, String lastMachineName, Date lastModifiedDate,
                                            String checkedBy) {
         String sql = "INSERT INTO ENC_LOCATION_TRF_HDR (" +
@@ -355,9 +359,9 @@ public class EncMobiShopperTrnItemsRepository {
                 "ENTERED_DATE, DOC_TRAN_CD, STATUS, LAST_ENTERED_BY, LAST_MACHINE_NM, " +
                 "LAST_MODIFIED_DATE, CHECKED_BY" +
                 ") VALUES (" +
-                ":compCd, :branchCd, :tranCd, :docSeries, :docCd, :docDt, " +
-                ":fromLocCd, :toLocCd, :remarks, :docTime, :enteredBy, :machineNm, " +
-                ":enteredDate, :docTranCd, :status, :lastEnteredBy, :lastMachineNm, " +
+                ":compCd, :branchCd, :tranCd, :docSeries, :docCd, :docDate, " +
+                ":fromLocationCd, :toLocationCd, :remarks, :docTime, :enteredBy, :machineName, " +
+                ":enteredDate, :docTranCd, :status, :lastEnteredBy, :lastMachineName, " +
                 ":lastModifiedDate, :checkedBy)";
 
         MapSqlParameterSource params = new MapSqlParameterSource()
@@ -395,7 +399,7 @@ public class EncMobiShopperTrnItemsRepository {
      * @param fromLocationCd unique location code for the item to transfer from
      * @param toLocationCd unique location code for the item to transfer to
      */
-    public Integer insertEncLocationDetail(String compCd, String branchCd, Long tranCd, Integer rowCount, Integer qty ,
+    public Integer insertEncLocationDetail(String compCd, String branchCd, Long tranCd, Integer rowCount, BigDecimal qty ,
                                            String itemCd, String fromLocationCd, String toLocationCd) {
         String sql = "INSERT INTO ENC_LOCATION_TRF_DTL ( " +
                     "COMP_CD, BRANCH_CD, TRAN_CD, SR_CD, ITEM_CD, QTY," +
@@ -412,6 +416,8 @@ public class EncMobiShopperTrnItemsRepository {
                 .addValue("itemCd", itemCd)
                 .addValue("fromLocationCd", fromLocationCd)
                 .addValue("toLocationCd", toLocationCd);
+
+        System.out.println(params.getValues());
 
         return namedParameterJdbcTemplate.update(sql, params);
     }
