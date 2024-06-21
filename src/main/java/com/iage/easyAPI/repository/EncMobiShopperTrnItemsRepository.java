@@ -58,7 +58,7 @@ public class EncMobiShopperTrnItemsRepository {
             stagingDetailModel.setDocDate(rs.getDate("DOC_DT"));
             stagingDetailModel.setSrCd(rs.getInt("SR_CD"));
             stagingDetailModel.setItemCd(rs.getString("ITEM_CD"));
-            stagingDetailModel.setQty(rs.getBigDecimal("QTY"));
+            stagingDetailModel.setQty(rs.getString("QTY"));
             stagingDetailModel.setFromLocationCd(rs.getString("FROM_LOC_CD"));
             stagingDetailModel.setToLocationCd(rs.getString("TO_LOC_CD"));
             stagingDetailModel.setUserName(rs.getString("USER_NM"));
@@ -401,11 +401,11 @@ public class EncMobiShopperTrnItemsRepository {
      */
     public Integer insertEncLocationDetail(String compCd, String branchCd, Long tranCd, Integer rowCount, BigDecimal qty ,
                                            String itemCd, String fromLocationCd, String toLocationCd) {
-        String sql = "INSERT INTO ENC_LOCATION_TRF_DTL ( " +
-                    "COMP_CD, BRANCH_CD, TRAN_CD, SR_CD, ITEM_CD, QTY," +
+        String sql = "INSERT INTO ENC_LOCATION_TRF_DTL (" +
+                    "COMP_CD, BRANCH_CD, TRAN_CD, SR_CD, QTY, ITEM_CD," +
                     "FROM_LOC_CD, TO_LOC_CD " +
-                    " ) VALUES ( " +
-                    " :compCd, :branchCd, :tranCd, :rowCount, :qty, :itemCd, :fromLocationCd, :toLocationCd)";
+                    ") VALUES (" +
+                    ":compCd, :branchCd, :tranCd, :rowCount, :qty, :itemCd, :fromLocationCd, :toLocationCd)";
 
         MapSqlParameterSource params = new MapSqlParameterSource()
                 .addValue("compCd", compCd)

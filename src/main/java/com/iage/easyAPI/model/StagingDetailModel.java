@@ -11,7 +11,7 @@ public class StagingDetailModel {
     Date docDate;
     Integer srCd;
     String itemCd;
-    BigDecimal qty;
+    String qty;
     String fromLocationCd;
     String toLocationCd;
     String userName;
@@ -66,11 +66,11 @@ public class StagingDetailModel {
         this.itemCd = itemCd;
     }
 
-    public BigDecimal getQty() {
+    public String getQty() {
         return qty;
     }
 
-    public void setQty(BigDecimal qty) {
+    public void setQty(String qty) {
         this.qty = qty;
     }
 

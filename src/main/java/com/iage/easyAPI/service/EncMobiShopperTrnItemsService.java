@@ -14,6 +14,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.sql.Date;
 import java.sql.Time;
 import java.time.LocalDate;
@@ -178,7 +179,7 @@ public class EncMobiShopperTrnItemsService {
         String branchCd = jsonObject.getString("branchCd");
         String userName = jsonObject.getString("userName");
         String tranType = jsonObject.getString("tranType");
-        //String docSeries = jsonObject.getString("docSeries");
+        String toLocationCd = jsonObject.getString("toLocationCd");
         String tranCd = "";
 
         Long nextTranCd = null;
@@ -208,15 +209,19 @@ public class EncMobiShopperTrnItemsService {
 
                         Integer insertHdr = encMobiShopperTrnItemsRepository.insertEncLocationHeader(compCd, branchCd, nextTranCd, model.getDocSeries(), maxDocumentCode, model.getDocDate(), model.getFromLocationCd(), model.getToLocationCd(), "Data saved from mobile app",
                                 localTime, userName, model.getMachineName(), model.getDocDate(), Long.valueOf(tranCd), "N", userName, model.getMachineName(), model.getDocDate(), "Entered by mobile app");
-
-                        Integer insertDetail = encMobiShopperTrnItemsRepository.insertEncLocationDetail(compCd, branchCd, nextTranCd, model.getSrCd(), model.getQty(), model.getItemCd(), model.getFromLocationCd(), model.getToLocationCd());
-                        System.out.println(insertDetail);
+//                        System.out.println("SRCD" + model.);
+//                        BigDecimal qty = new BigDecimal(model.getQty());
+                        BigDecimal qtyBigDecimal = new BigDecimal(model.getQty());
+                        System.out.println(qtyBigDecimal);
+                        System.out.println("q " + nextTranCd);
+                        Integer insertDetail = encMobiShopperTrnItemsRepository.insertEncLocationDetail(compCd, branchCd, nextTranCd, model.getSrCd(), qtyBigDecimal, model.getItemCd(), model.getFromLocationCd(), toLocationCd);
+                        System.out.println("ID" + insertDetail);
                         return customJson.RaiseApplicationMsg("0","Location transfer created with Doc Cd : " + maxDocumentCode);
                     }
                 }
             }
 
-        return customJson.RaiseApplicationMsg("0", "Item inserted successfully");
+        return customJson.RaiseApplicationError("99", "Error!!! Please contact system admin.");
     }
 }
 
