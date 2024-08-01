@@ -22,7 +22,11 @@ import java.time.LocalTime;
 import java.util.Arrays;
 import java.util.List;
 
-
+/**
+ * this class is used to perform logic for insert and delete operations for warehouse location transfer
+ * @see EncMobiShopperTrnItemsRepository for all the sql queries needed for warehouse location transfer
+ * @see CustomJson for implementing custom json implementation for all responses
+ */
 @Service
 public class EncMobiShopperTrnItemsService {
 
@@ -35,9 +39,7 @@ public class EncMobiShopperTrnItemsService {
     @Autowired
     Sequences sequences;
 
-    /**
-     *
-     */
+    // This is a method to insert items into staging table before final commit
     @Transactional
     public String insertTrnItemsStaging(String params) {
         /*
@@ -153,6 +155,7 @@ public class EncMobiShopperTrnItemsService {
 
     }
 
+    // this is a method to delete items from staging table
     public String deleteTrnItemsFromStaging(String params) {
 
         JSONObject jsonParams = new JSONObject(params);
@@ -160,6 +163,7 @@ public class EncMobiShopperTrnItemsService {
         String branchCd = jsonParams.getString("branchCd");
         String tranType = jsonParams.getString("tranType");
         String username = jsonParams.getString("username");
+        String machineNm = jsonParams.getString("machineNm");
 
         Integer deletedRows = 0;
 
@@ -171,6 +175,7 @@ public class EncMobiShopperTrnItemsService {
         }
     }
 
+    // this is a method to commit items from staging table to main header detail table
     @Transactional
     public String insertTrnItemsCommit(String params) {
 
@@ -180,6 +185,7 @@ public class EncMobiShopperTrnItemsService {
         String userName = jsonObject.getString("userName");
         String tranType = jsonObject.getString("tranType");
         String toLocationCd = jsonObject.getString("toLocationCd");
+        String machineNm = jsonObject.getString("machineNm");
         String tranCd = "";
 
         Long nextTranCd = null;
@@ -207,15 +213,13 @@ public class EncMobiShopperTrnItemsService {
                         String maxDocumentCode = encMobiShopperTrnItemsRepository.getMaxDocNumber(compCd, branchCd, Long.valueOf(tranCd));
                         nextTranCd = sequences.getNextTranCdSequence();
 
-                        Integer insertHdr = encMobiShopperTrnItemsRepository.insertEncLocationHeader(compCd, branchCd, nextTranCd, model.getDocSeries(), maxDocumentCode, model.getDocDate(), model.getFromLocationCd(), model.getToLocationCd(), "Data saved from mobile app",
+                        Integer insertHdr = encMobiShopperTrnItemsRepository.insertEncLocationHeader(compCd, branchCd, nextTranCd, model.getDocSeries(), maxDocumentCode, model.getDocDate(), model.getFromLocationCd(), toLocationCd, "Data saved from mobile app",
                                 localTime, userName, model.getMachineName(), model.getDocDate(), Long.valueOf(tranCd), "N", userName, model.getMachineName(), model.getDocDate(), "Entered by mobile app");
-//                        System.out.println("SRCD" + model.);
-//                        BigDecimal qty = new BigDecimal(model.getQty());
-                        BigDecimal qtyBigDecimal = new BigDecimal(model.getQty());
-                        System.out.println(qtyBigDecimal);
-                        System.out.println("q " + nextTranCd);
-                        Integer insertDetail = encMobiShopperTrnItemsRepository.insertEncLocationDetail(compCd, branchCd, nextTranCd, model.getSrCd(), qtyBigDecimal, model.getItemCd(), model.getFromLocationCd(), toLocationCd);
-                        System.out.println("ID" + insertDetail);
+
+                        BigDecimal qty = new BigDecimal(model.getQty());
+
+                        Integer insertDetail = encMobiShopperTrnItemsRepository.insertEncLocationDetail(compCd, branchCd, nextTranCd, model.getSrCd(), qty, model.getItemCd(), model.getFromLocationCd(), toLocationCd);
+
                         return customJson.RaiseApplicationMsg("0","Location transfer created with Doc Cd : " + maxDocumentCode);
                     }
                 }

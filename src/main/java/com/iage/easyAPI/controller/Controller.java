@@ -1,6 +1,7 @@
 package com.iage.easyAPI.controller;
 
 import com.iage.easyAPI.entity.EncMobiShopperTrnItems;
+import com.iage.easyAPI.service.EncMobiShopperVerificationService;
 import com.iage.easyAPI.utility.CustomResponseObject;
 import com.iage.easyAPI.service.EncMobiShopperTrnItemsService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,8 +16,8 @@ public class Controller {
     EncMobiShopperTrnItemsService encMobiShopperTrnItemsService;
 
 
-
-    EncMobiShopperTrnItems encMobiShopperTrnItems;
+    @Autowired
+    EncMobiShopperVerificationService encMobiShopperVerificationService;
 
 
     @PostMapping(value = "/insertTrnItemsStaging")
@@ -34,11 +35,10 @@ public class Controller {
         return encMobiShopperTrnItemsService.insertTrnItemsCommit(params);
     }
 
-    @PostMapping(value = "/json")
-    public Object jsonOutput() {
-        CustomResponseObject customResponseObject = new CustomResponseObject();
-        String[] arr = {"branchCd","compCd","srCd", "tranCd","tranType"};
-        return customResponseObject.CustomResponse(EncMobiShopperTrnItems.class, arr, "0");
+
+    @PostMapping(value = "/login")
+    public Object login(@RequestBody String params) {
+        return encMobiShopperVerificationService.verifyUserIdAndPassword(params);
     }
 
 

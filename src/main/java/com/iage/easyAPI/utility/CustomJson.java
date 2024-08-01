@@ -21,7 +21,7 @@ public class CustomJson {
      *                      It means that if the value is passed that that value will be passed else default value will be passed as parameter
      * @return : Json object converted to string is returned
      */
-    public String CustomJsonImpl(List<?> response, String responseCode, String[] keysToRemove, Optional<String> errorMsg, Optional<String> errorDetail) {
+    public String CustomJsonImpl(List<?> response, String responseCode, Optional<String[]> keysToRemove, Optional<String> errorMsg, Optional<String> errorDetail) {
 
         // Creating responseJsonObject for holding the responseData
         JSONObject responseJsonObject = new JSONObject();
@@ -36,9 +36,9 @@ public class CustomJson {
         if (responseCode.equals("0")) {
             for (Object item : response) {
                 JSONObject jsonObject = new JSONObject(item);
-                for (String key : keysToRemove) {
-                    jsonObject.remove(key);
-                }
+//                for (String key : keysToRemove) {
+//                    jsonObject.remove(key);
+//                }
                 jsonArray.put(jsonObject);
 
             }
